@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">QRCodeScan</string>
+    <string name="text_scan_success">Scan successfully</string>
+    <string name="text_copy_content">Copy Content</string>
+    <string name="text_share">Share</string>
+    <string name="text_search">Search</string>
+    <string name="text_browse_website">Browse Website</string>
+    <string name="send_to">Send to</string>
+    <string name="text_history">History</string>
+</resources>
