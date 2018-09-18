@@ -37,7 +37,6 @@ public class CustomDialogResult extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = new Dialog(getActivity(), android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.dialog_result);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         final TextView txtContent = dialog.findViewById(R.id.txt_content);
         if (!content.equals(""))
             txtContent.setText(content);
