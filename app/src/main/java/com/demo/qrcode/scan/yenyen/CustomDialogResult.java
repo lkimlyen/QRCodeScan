@@ -35,10 +35,7 @@ public class CustomDialogResult extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = new Dialog(getActivity());
-        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
-                , WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        Dialog dialog = new Dialog(getActivity(), android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.dialog_result);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         final TextView txtContent = dialog.findViewById(R.id.txt_content);

@@ -19,8 +19,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.demo.qrcode.scan.yenyen.decode.BitmapDecoder;
@@ -44,8 +46,9 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     private final String TAG = MainActivity.class.getName();
     private ZXingScannerView mScannerView;
 
-    @BindView(R.id.img_flash)
+    @BindView(R.id.img_flash_off)
     ImageView imgFlash;
+
 
     @BindView(R.id.img_list)
     ImageView imgList;
@@ -73,6 +76,9 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
                 return new CustomViewFinderView(context);
             }
         };
+        mScannerView.setBorderColor(getResources().getColor(R.color.colorPrimary));
+        mScannerView.setBorderLineLength(getResources().getDimensionPixelSize(R.dimen.size_50dp));
+        mScannerView.setBorderStrokeWidth(getResources().getDimensionPixelSize(R.dimen.size_7dp));
         checPermissionCamera();
     }
 
@@ -139,15 +145,15 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     }
 
 
-    @OnClick(R.id.img_flash)
+    @OnClick(R.id.layout_flash)
     public void flash() {
         if (!isTurnOn) {
             mScannerView.setFlash(true);
-            imgFlash.setImageResource(R.drawable.ic_flash_on);
+            imgFlash.setVisibility(View.INVISIBLE);
             isTurnOn = true;
         } else {
             mScannerView.setFlash(false);
-            imgFlash.setImageResource(R.drawable.ic_flash_off);
+            imgFlash.setVisibility(View.VISIBLE);
             isTurnOn = false;
         }
     }
@@ -226,47 +232,47 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         startActivity(intent);
     }
 
-private static class CustomViewFinderView extends ViewFinderView {
-    public static final int TRADE_MARK_TEXT_SIZE_SP = 40;
-    public final Paint PAINT = new Paint();
+    private static class CustomViewFinderView extends ViewFinderView {
+        public static final int TRADE_MARK_TEXT_SIZE_SP = 40;
+        public final Paint PAINT = new Paint();
 
-    public CustomViewFinderView(Context context) {
-        super(context);
-        init();
-    }
+        public CustomViewFinderView(Context context) {
+            super(context);
+            init();
+        }
 
-    public CustomViewFinderView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
+        public CustomViewFinderView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            init();
+        }
 
-    private void init() {
-        PAINT.setColor(Color.WHITE);
-        PAINT.setAntiAlias(true);
-        float textPixelSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
-                TRADE_MARK_TEXT_SIZE_SP, getResources().getDisplayMetrics());
-        PAINT.setTextSize(textPixelSize);
-        setSquareViewFinder(true);
-    }
+        private void init() {
+            PAINT.setColor(Color.WHITE);
+            PAINT.setAntiAlias(true);
+            float textPixelSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+                    TRADE_MARK_TEXT_SIZE_SP, getResources().getDisplayMetrics());
+            PAINT.setTextSize(textPixelSize);
+            setSquareViewFinder(true);
+        }
 
-    @Override
-    public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+        @Override
+        public void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
 
-    }
+        }
 
-    private void drawTradeMark(Canvas canvas) {
-        Rect framingRect = getFramingRect();
-        float tradeMarkTop;
-        float tradeMarkLeft;
-        if (framingRect != null) {
-            tradeMarkTop = framingRect.bottom + PAINT.getTextSize() + 10;
-            tradeMarkLeft = framingRect.left;
-        } else {
-            tradeMarkTop = 10;
-            tradeMarkLeft = canvas.getHeight() - PAINT.getTextSize() - 10;
+        private void drawTradeMark(Canvas canvas) {
+            Rect framingRect = getFramingRect();
+            float tradeMarkTop;
+            float tradeMarkLeft;
+            if (framingRect != null) {
+                tradeMarkTop = framingRect.bottom + PAINT.getTextSize() + 10;
+                tradeMarkLeft = framingRect.left;
+            } else {
+                tradeMarkTop = 10;
+                tradeMarkLeft = canvas.getHeight() - PAINT.getTextSize() - 10;
+            }
         }
     }
-}
 
 }

@@ -45,7 +45,7 @@ public class ListScanActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         rvHistory.setLayoutManager(mLayoutManager);
         rvHistory.setAdapter(adapter);
-        rvHistory.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+       // rvHistory.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
         cbDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

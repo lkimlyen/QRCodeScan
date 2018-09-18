@@ -1,7 +1,9 @@
 package com.demo.qrcode.scan.yenyen;
 
 import android.app.Application;
+import android.graphics.Typeface;
 import android.support.multidex.MultiDexApplication;
+import android.support.v4.content.res.ResourcesCompat;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -23,5 +25,7 @@ public class MainApplication extends MultiDexApplication {
                     }})
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
+
+        Typeface typeface = ResourcesCompat.getFont(getApplicationContext(), R.font.notosans);
     }
 }
