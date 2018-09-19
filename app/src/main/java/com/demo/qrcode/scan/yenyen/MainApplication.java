@@ -26,6 +26,6 @@ public class MainApplication extends MultiDexApplication {
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
 
-        Typeface typeface = ResourcesCompat.getFont(getApplicationContext(), R.font.notosans);
+        Typeface typeface = ResourcesCompat.getFont(getApplicationContext(), R.font.notodanscjkkr_bold);
     }
 }

@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     @BindView(R.id.img_flash_off)
     ImageView imgFlash;
 
-
     @BindView(R.id.img_list)
     ImageView imgList;
 

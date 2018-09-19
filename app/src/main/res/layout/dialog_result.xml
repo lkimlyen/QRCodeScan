@@ -51,7 +51,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:lines="4"
-        android:maxLines="4"
         android:padding="10dp"
         android:fontFamily="@font/notosans"
         android:scrollbars="vertical"
@@ -99,8 +98,6 @@
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="12sp" />
-
-
     </LinearLayout>
     <View
         android:layout_width="match_parent"

@@ -7,8 +7,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -38,6 +40,7 @@ public class CustomDialogResult extends DialogFragment {
         Dialog dialog = new Dialog(getActivity(), android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.dialog_result);
         final TextView txtContent = dialog.findViewById(R.id.txt_content);
+
         if (!content.equals(""))
             txtContent.setText(content);
         dialog.findViewById(R.id.btn_browse_website).setOnClickListener(new View.OnClickListener() {
