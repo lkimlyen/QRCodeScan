@@ -14,6 +14,7 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +41,10 @@ public class CustomDialogResult extends DialogFragment {
         Dialog dialog = new Dialog(getActivity(), android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.dialog_result);
         final TextView txtContent = dialog.findViewById(R.id.txt_content);
-
+        final TextView txtTitle = dialog.findViewById(R.id.txt_title);
+        Typeface typeface = ResourcesCompat.getFont(getActivity().getApplicationContext(), R.font.notodanscjkkr_bold);
+        txtContent.setTypeface(typeface);
+        txtTitle.setTypeface(typeface);
         if (!content.equals(""))
             txtContent.setText(content);
         dialog.findViewById(R.id.btn_browse_website).setOnClickListener(new View.OnClickListener() {
@@ -56,7 +60,17 @@ public class CustomDialogResult extends DialogFragment {
                 }
             }
         });
+       Button btnCopy = dialog.findViewById(R.id.btn_copy);
+       btnCopy.setTypeface(typeface);
 
+        Button btnBrowseWeb = dialog.findViewById(R.id.btn_browse_website);
+        btnBrowseWeb.setTypeface(typeface);
+
+        Button btnSearch = dialog.findViewById(R.id.btn_search);
+        btnSearch.setTypeface(typeface);
+
+        Button btnShare = dialog.findViewById(R.id.btn_share);
+        btnShare.setTypeface(typeface);
         dialog.findViewById(R.id.btn_copy).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
