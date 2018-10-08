@@ -2,6 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'realm-android'
 apply plugin: 'io.fabric'
 android {
+    signingConfigs {
+        QRCodeAppRelease {
+            keyAlias 'qrcode'
+            keyPassword '123456aA'
+            storeFile file('D:/yen/QRCodeScan/keyQRCode.jks')
+            storePassword '123456aA'
+        }
+    }
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.demo.qrcode.scan.yenyen"
@@ -46,5 +54,4 @@ dependencies {
     implementation('com.crashlytics.sdk.android:crashlytics:2.9.3@aar') {
         transitive = true;
     }
-
 }
