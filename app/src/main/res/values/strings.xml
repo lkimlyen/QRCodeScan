@@ -7,8 +7,9 @@
     <string name="text_browse_website">Browse Website</string>
     <string name="send_to">Send to</string>
     <string name="text_history">History</string>
-    <string name="banner_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_id">ca-app-pub-4694289709203241/4296664704</string>
 
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
-    <string name="full_screen_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="admob_app_id">ca-app-pub-4694289709203241~6567604820</string>
+    <string name="full_screen_id">ca-app-pub-4694289709203241/3258915205</string>
+    <string name="content_rating">저희앱을 선택해 주셔서 감사합니다. \n 마음에 드신다면 별점 다섯개를 주셔서  \n 개발을 지원해 주시겠습니까?</string>
 </resources>

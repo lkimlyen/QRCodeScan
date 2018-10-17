@@ -3,6 +3,7 @@ package com.demo.qrcode.scan.yenyen;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -10,13 +11,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -24,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.demo.qrcode.scan.yenyen.decode.BitmapDecoder;
@@ -35,6 +35,7 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.google.zxing.Result;
 import com.google.zxing.client.result.ResultParser;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -92,37 +93,6 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         mScannerView.setBorderLineLength(getResources().getDimensionPixelSize(R.dimen.size_50dp));
         mScannerView.setBorderStrokeWidth(getResources().getDimensionPixelSize(R.dimen.size_7dp));
         checPermissionCamera();
-        mAdView.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-                Toast.makeText(MainActivity.this, "Show thành công", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                // Code to be executed when an ad request fails.
-                Toast.makeText(MainActivity.this, "Show Fail" + errorCode, Toast.LENGTH_SHORT).show();
-
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -133,28 +103,24 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
 
         });
 
-        Button button = findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent goToMarket = new Intent();
-                try {
-                   goToMarket = new Intent(Intent.ACTION_VIEW,
-                           Uri.parse("market://details?id=com.zing.tv3" ));
-                    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    startActivity(goToMarket);
-                } catch (android.content.ActivityNotFoundException e) {
-                    goToMarket = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("http://play.google.com/store/apps/details?id=com.zing.tv3" ));
-                    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    startActivity(goToMarket);
-                }
+        checkShowDialogRating();
+
+    }
+
+    public void checkShowDialogRating() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        boolean show = sharedPref.getBoolean("DIALOG_RATING", false);
+
+        if (!show) {
+            String date = sharedPref.getString("DATE_SHOW", "");
+            if (TextUtils.isEmpty(date) || !date.equals(getDateTimeCurrent())){
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("DATE_SHOW", getDateTimeCurrent());
+                editor.commit();
+                CustomDialogRating dialog = new CustomDialogRating();
+                dialog.show(getFragmentManager(), TAG);
             }
-        });
+        }
     }
 
     private void checPermissionCamera() {
@@ -358,4 +324,12 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
             Log.d("TAG", "The interstitial wasn't loaded yet.");
         }
     }
+    public static String getDateTimeCurrent() {
+        Date currentTime = Calendar.getInstance().getTime();
+        String sDate = "";
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        sDate = formatter.format(currentTime);
+        return sDate;
+    }
+
 }
