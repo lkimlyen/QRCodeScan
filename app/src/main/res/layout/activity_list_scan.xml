@@ -70,5 +70,14 @@
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_weight="1"
         android:id="@+id/rv_history"/>
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/banner"
+        app:adSize="BANNER"
+        android:layout_weight="0"
+        app:adUnitId="@string/banner_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
 </LinearLayout>

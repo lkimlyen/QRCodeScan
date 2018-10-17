@@ -8,6 +8,9 @@ import android.support.v7.widget.RecyclerView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +37,11 @@ public class ListScanActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_scan);
         ButterKnife.bind(this);
+        AdView mAdView = findViewById(R.id.banner);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("7EC1E06EE9854334195EC438256A9218").build();
+
+        mAdView.loadAd(adRequest);
         adapter = new HistoryAdapter(realm.where(QRCodeList.class).findFirst().getItemList(), new HistoryAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(QRCode item) {

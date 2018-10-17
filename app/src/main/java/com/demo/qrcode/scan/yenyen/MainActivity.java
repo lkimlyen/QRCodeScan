@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -21,11 +22,16 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.demo.qrcode.scan.yenyen.decode.BitmapDecoder;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.zxing.Result;
 import com.google.zxing.client.result.ResultParser;
 
@@ -61,14 +67,21 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     private
     String photoPath = "";
     private boolean isTurnOn = false;
-    private Bitmap selectedImage;
+    InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        AdView mAdView = findViewById(R.id.banner);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("7EC1E06EE9854334195EC438256A9218").build();
 
+        mAdView.loadAd(adRequest);
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getString(R.string.full_screen_id));
+        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("7EC1E06EE9854334195EC438256A9218").build());
         mScannerView = new ZXingScannerView(this) {
             @Override
             protected IViewFinder createViewFinderView(Context context) {
@@ -79,6 +92,69 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         mScannerView.setBorderLineLength(getResources().getDimensionPixelSize(R.dimen.size_50dp));
         mScannerView.setBorderStrokeWidth(getResources().getDimensionPixelSize(R.dimen.size_7dp));
         checPermissionCamera();
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Toast.makeText(MainActivity.this, "Show thành công", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Toast.makeText(MainActivity.this, "Show Fail" + errorCode, Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        });
+
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                // Load the next interstitial.
+                finish();
+            }
+
+        });
+
+        Button button = findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent goToMarket = new Intent();
+                try {
+                   goToMarket = new Intent(Intent.ACTION_VIEW,
+                           Uri.parse("market://details?id=com.zing.tv3" ));
+                    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    startActivity(goToMarket);
+                } catch (android.content.ActivityNotFoundException e) {
+                    goToMarket = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://play.google.com/store/apps/details?id=com.zing.tv3" ));
+                    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    startActivity(goToMarket);
+                }
+            }
+        });
     }
 
     private void checPermissionCamera() {
@@ -274,4 +350,12 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        } else {
+            Log.d("TAG", "The interstitial wasn't loaded yet.");
+        }
+    }
 }

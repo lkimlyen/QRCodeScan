@@ -1,6 +1,5 @@
 package com.demo.qrcode.scan.yenyen;
 
-import com.google.android.gms.maps.model.Dot;
 
 import java.util.Collection;
 

@@ -1,4 +1,4 @@
-package com.demo.qrcode.scan.yenyen;
+package com.demo.qrcode.scan.yenyen.decode;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -12,16 +12,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.demo.qrcode.scan.yenyen.R;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-public class CustomDialogResult extends DialogFragment {
+public class CustomDialogRating extends DialogFragment {
 
 
     private String content = "";

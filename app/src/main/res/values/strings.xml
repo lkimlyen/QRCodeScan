@@ -7,4 +7,8 @@
     <string name="text_browse_website">Browse Website</string>
     <string name="send_to">Send to</string>
     <string name="text_history">History</string>
+    <string name="banner_id">ca-app-pub-3940256099942544/6300978111</string>
+
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="full_screen_id">ca-app-pub-3940256099942544/1033173712</string>
 </resources>
