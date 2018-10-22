@@ -321,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         if (mInterstitialAd.isLoaded()) {
             mInterstitialAd.show();
         } else {
-            Log.d("TAG", "The interstitial wasn't loaded yet.");
+           super.onBackPressed();
         }
     }
     public static String getDateTimeCurrent() {

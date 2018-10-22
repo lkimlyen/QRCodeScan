@@ -46,14 +46,14 @@ public class CustomDialogRating extends DialogFragment {
                 Intent goToMarket = new Intent();
                 try {
                     goToMarket = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("market://details?id=com.zing.tv3" ));
+                            Uri.parse("market://details?id="+getActivity().getPackageName() ));
                     goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
                             Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                     startActivity(goToMarket);
                 } catch (android.content.ActivityNotFoundException e) {
                     goToMarket = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("http://play.google.com/store/apps/details?id=com.zing.tv3" ));
+                            Uri.parse("http://play.google.com/store/apps/details?id="+getActivity().getPackageName() ));
                     goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
                             Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
