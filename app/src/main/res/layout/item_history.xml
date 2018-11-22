@@ -37,7 +37,6 @@
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
                     android:text="txtxt"
-                    android:fontFamily="@font/notosans"
                     android:textStyle="bold"
                     android:textSize="14sp"/>
 

@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.demo.qrcode.scan.yenyen.decode.BitmapDecoder;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.zxing.Result;
@@ -46,6 +47,7 @@ import butterknife.OnClick;
 import me.dm7.barcodescanner.core.IViewFinder;
 import me.dm7.barcodescanner.core.ViewFinderView;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class MainActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
@@ -78,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         AdView mAdView = findViewById(R.id.banner);
         AdRequest adRequest = new AdRequest.Builder()
                 .addTestDevice("7EC1E06EE9854334195EC438256A9218").build();
-
         mAdView.loadAd(adRequest);
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.full_screen_id));
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
                     3);
             return;
         }
+        contentFrame.removeAllViews();
         contentFrame.addView(mScannerView);
     }
 
@@ -182,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         }
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
+        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(photoPickerIntent, REQUEST_CODE_PICK_IMAGE);
     }
 
@@ -235,6 +238,14 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
 
                     Cursor cursor = getContentResolver().query(
                             data.getData(), null, null, null, null);
+                    if (cursor == null){
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "Barcode Fail", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return;
+                    }
                     if (cursor.moveToFirst()) {
                         photoPath = cursor.getString(cursor
                                 .getColumnIndex(MediaStore.Images.Media.DATA));
@@ -331,5 +342,8 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         sDate = formatter.format(currentTime);
         return sDate;
     }
-
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 }

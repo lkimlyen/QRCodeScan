@@ -13,6 +13,7 @@ import com.google.android.gms.ads.MobileAds;
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 public class MainApplication extends MultiDexApplication {
     @Override
@@ -28,8 +29,10 @@ public class MainApplication extends MultiDexApplication {
                     }})
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
-
-        Typeface typeface = ResourcesCompat.getFont(getApplicationContext(), R.font.notodanscjkkr_bold);
         MobileAds.initialize(this, getString(R.string.admob_app_id));
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/notodanscjkkr_bold.otf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
     }
 }
