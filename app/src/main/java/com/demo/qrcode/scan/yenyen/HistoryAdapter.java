@@ -17,7 +17,6 @@ import io.realm.OrderedRealmCollection;
 
 public class HistoryAdapter extends RealmRecyclerViewAdapter<QRCode, HistoryAdapter.HistoryHolder> {
 
-    private boolean inDeletionMode = false;
     private Set<Integer> countersToDelete = new HashSet<>();
     private OnItemClickListener listener;
 
@@ -27,22 +26,19 @@ public class HistoryAdapter extends RealmRecyclerViewAdapter<QRCode, HistoryAdap
         this.listener = listener;
     }
 
-    void enableDeletionMode(boolean enabled) {
-        inDeletionMode = enabled;
-        if (!enabled) {
-            countersToDelete.clear();
-        }
-        notifyDataSetChanged();
-    }
 
     Set<Integer> getCountersToDelete() {
         return countersToDelete;
     }
 
+    public void clearCounterDelete() {
+        countersToDelete.clear();
+    }
+
     public void selectAll(boolean isChecked, Set<Integer> integerSet) {
         if (isChecked) {
             countersToDelete.addAll(integerSet);
-        }else {
+        } else {
             countersToDelete.clear();
         }
         notifyDataSetChanged();
@@ -69,20 +65,19 @@ public class HistoryAdapter extends RealmRecyclerViewAdapter<QRCode, HistoryAdap
         holder.txtContent.setText(item.getContent());
         holder.txtDate.setText(item.getDateCreate() + "");
         holder.cbDelete.setChecked(countersToDelete.contains(item.getId()));
-        if (inDeletionMode) {
-            holder.cbDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (isChecked) {
-                        countersToDelete.add(item.getId());
-                    } else {
+        holder.cbDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    countersToDelete.add(item.getId());
+                } else {
+                    if (countersToDelete.contains(item.getId())) {
                         countersToDelete.remove(item.getId());
                     }
                 }
-            });
-        } else {
-            holder.cbDelete.setOnCheckedChangeListener(null);
-        }
+            }
+        });
+
     }
 
 

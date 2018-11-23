@@ -56,13 +56,13 @@ public class QRCode extends RealmObject {
     }
 
     static void create(Realm realm, QRCode item) {
-        QRCodeList parent = realm.where(QRCodeList.class).findFirst();
-        RealmList<QRCode> items = parent.getItemList();
-        items.clear();
+       // QRCodeList parent = realm.where(QRCodeList.class).findFirst();
+     //   RealmList<QRCode> items = parent.getItemList();
+      //  items.clear();
         realm.copyToRealmOrUpdate(item);
-        RealmResults<QRCode> realmResults = realm.where(QRCode.class).sort("id", Sort.DESCENDING).findAll();
-        for (QRCode qrCode : realmResults){
-            items.add(qrCode);
-        }
+      //  RealmResults<QRCode> realmResults = realm.where(QRCode.class).sort("id", Sort.DESCENDING).findAll();
+      //  for (QRCode qrCode : realmResults){
+      //      items.add(qrCode);
+      //  }
     }
 }

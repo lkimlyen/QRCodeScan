@@ -1,9 +1,12 @@
 package com.demo.qrcode.scan.yenyen;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -11,7 +14,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -21,40 +29,59 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.demo.qrcode.scan.yenyen.common.ActionUtils;
+import com.demo.qrcode.scan.yenyen.common.QrUtils;
 import com.demo.qrcode.scan.yenyen.decode.BitmapDecoder;
+import com.demo.qrcode.scan.yenyen.zxing.camera.CameraManager;
+import com.demo.qrcode.scan.yenyen.zxing.decoding.CaptureActivityHandler;
+import com.demo.qrcode.scan.yenyen.zxing.decoding.InactivityTimer;
+import com.demo.qrcode.scan.yenyen.zxing.view.ViewfinderView;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.google.zxing.client.result.ResultParser;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Vector;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import me.dm7.barcodescanner.core.IViewFinder;
-import me.dm7.barcodescanner.core.ViewFinderView;
-import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
-public class MainActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
+public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
     public static final int REQUEST_CODE_PICK_IMAGE = 666;
     private final String TAG = MainActivity.class.getName();
-    private ZXingScannerView mScannerView;
 
+    private static final int REQUEST_PERMISSION_CAMERA = 1000;
+    private static final int REQUEST_PERMISSION_PHOTO = 1001;
+    private CaptureActivityHandler handler;
+    @BindView(R.id.viewfinder_view)
+    ViewfinderView viewfinderView;
+    private boolean hasSurface;
+    private Vector<BarcodeFormat> decodeFormats;
+    private String characterSet;
+    private InactivityTimer inactivityTimer;
     @BindView(R.id.img_flash_off)
     ImageView imgFlash;
 
@@ -64,47 +91,52 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     @BindView(R.id.img_picture)
     ImageView imgPicture;
 
-    @BindView(R.id.content_frame)
-    ViewGroup contentFrame;
 
-    private
-    String photoPath = "";
+    private String photoPath = "";
     private boolean isTurnOn = false;
     InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         AdView mAdView = findViewById(R.id.banner);
         AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice("7EC1E06EE9854334195EC438256A9218").build();
+                .addTestDevice("7EC1E06EE9854334195EC438256A9218").addTestDevice("1265C188D8463BE6E096069948AFD718").build();
         mAdView.loadAd(adRequest);
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.full_screen_id));
         mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("7EC1E06EE9854334195EC438256A9218").build());
-        mScannerView = new ZXingScannerView(this) {
-            @Override
-            protected IViewFinder createViewFinderView(Context context) {
-                return new CustomViewFinderView(context);
+        if (mInterstitialAd != null) {
+            mInterstitialAd.setAdListener(new AdListener() {
+                @Override
+                public void onAdClosed() {
+                    // Load the next interstitial.
+                    finish();
+                }
+
+            });
+
+        }
+
+
+        hasSurface = false;
+        inactivityTimer = new InactivityTimer(this);
+        CameraManager.init(getApplication());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.CAMERA},
+                        REQUEST_PERMISSION_CAMERA);
+            }else {
+                checkShowDialogRating();
             }
-        };
-        mScannerView.setBorderColor(getResources().getColor(R.color.colorPrimary));
-        mScannerView.setBorderLineLength(getResources().getDimensionPixelSize(R.dimen.size_50dp));
-        mScannerView.setBorderStrokeWidth(getResources().getDimensionPixelSize(R.dimen.size_7dp));
-        checPermissionCamera();
+        }else {
+            checkShowDialogRating();
+        }
 
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdClosed() {
-                // Load the next interstitial.
-                finish();
-            }
-
-        });
-
-        checkShowDialogRating();
 
     }
 
@@ -114,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
 
         if (!show) {
             String date = sharedPref.getString("DATE_SHOW", "");
-            if (TextUtils.isEmpty(date) || !date.equals(getDateTimeCurrent())){
+            if (TextUtils.isEmpty(date) || !date.equals(getDateTimeCurrent())) {
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.putString("DATE_SHOW", getDateTimeCurrent());
                 editor.commit();
@@ -124,30 +156,6 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         }
     }
 
-    private void checPermissionCamera() {
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    3);
-            return;
-        }
-        contentFrame.removeAllViews();
-        contentFrame.addView(mScannerView);
-    }
-
-    @Override
-    public void handleResult(Result result) {
-        // Do something with the result here
-        Log.v(TAG, result.getText()); // Prints scan results
-        Log.v(TAG, result.getBarcodeFormat().toString());// Prints the scan format (qrcode, pdf417 etc.)
-        saveCode(result.getText());
-
-        // If you would like to resume scanning, call this method below:
-        // mScannerView.resumeCameraPreview(this);
-    }
 
     private void saveCode(String result) {
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
@@ -157,8 +165,8 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         int Min = c.get(Calendar.MINUTE);
         String mHour = (Hr24 < 10) ? "0" + Hr24 : Hr24 + "";
         String mMin = (Min < 10) ? "0" + Min : Min + "";
-
-        QRCode item = new QRCode(RealmHelper.getMaxId() + 1, result, mHour + ":" + mMin + ", " + currentDateandTime);
+        String dateCreate = mHour + ":" + mMin + ", " + currentDateandTime;
+        QRCode item = new QRCode(RealmHelper.getMaxId(), result, dateCreate);
         RealmHelper.addItemAsync(item);
         CustomDialogResult dialogResult = new CustomDialogResult();
         dialogResult.show(getFragmentManager(), TAG);
@@ -166,53 +174,94 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         dialogResult.setListener(new CustomDialogResult.OnDismissDialogListener() {
             @Override
             public void onDismiss() {
-                mScannerView.resumeCameraPreview(MainActivity.this);
+                restartPreview();
             }
         });
     }
 
     @OnClick(R.id.img_picture)
     public void getPicture() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    1);
-            return;
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSION_PHOTO);
+        } else {
+            ActionUtils.startActivityForGallery(this, ActionUtils.PHOTO_REQUEST_GALLERY);
         }
-        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-        photoPickerIntent.setType("image/*");
-        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(photoPickerIntent, REQUEST_CODE_PICK_IMAGE);
+
+
     }
 
 
     @OnClick(R.id.layout_flash)
     public void flash() {
         if (!isTurnOn) {
-            mScannerView.setFlash(true);
+            setFlashLightOpen(true);
             imgFlash.setVisibility(View.INVISIBLE);
             isTurnOn = true;
         } else {
-            mScannerView.setFlash(false);
+            setFlashLightOpen(false);
             imgFlash.setVisibility(View.VISIBLE);
             isTurnOn = false;
         }
     }
 
+    public void setFlashLightOpen(boolean open) {
+        CameraManager.get().setFlashLight(open);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        mScannerView.setResultHandler(this);
-        mScannerView.startCamera();
+        Log.d(TAG, "xxxxxxxxxxxxxxxxxxxonResume");
+        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
+        SurfaceHolder surfaceHolder = surfaceView.getHolder();
+        if (hasSurface) {
+            initCamera(surfaceHolder);
+        } else {
+            surfaceHolder.addCallback(this);
+            surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+        decodeFormats = null;
+        characterSet = null;
+
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        inactivityTimer.shutdown();
+        super.onDestroy();
+    }
+
+    private void initCamera(SurfaceHolder surfaceHolder) {
+        try {
+            CameraManager.get().openDriver(surfaceHolder);
+        } catch (IOException ioe) {
+            return;
+        } catch (RuntimeException e) {
+            return;
+        }
+        if (handler == null) {
+            handler = new CaptureActivityHandler(this, decodeFormats,
+                    characterSet);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mScannerView.stopCamera();
+        Log.d(TAG, "xxxxxxxxxxxxxxxxxxxonPause");
+        if (handler != null) {
+            handler.quitSynchronously();
+            handler = null;
+        }
+        imgFlash.setVisibility(View.VISIBLE);
+
+        //  flashIbtn.setImageResource(R.drawable.ic_flash_off_white_24dp);
+
+        CameraManager.get().closeDriver();
     }
 
 
@@ -220,63 +269,81 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (requestCode == 1) {
-                getPicture();
+        if (grantResults.length > 0 && requestCode == REQUEST_PERMISSION_CAMERA) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage("Camera permission request was denied.")
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .show();
+            }else {
+                checkShowDialogRating();
             }
-            if (requestCode == 3) checPermissionCamera();
+        } else if (grantResults.length > 0 && requestCode == REQUEST_PERMISSION_PHOTO) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                new AlertDialog.Builder(MainActivity.this)
+                       .setMessage("Gallery permission request was denied.")
+                        .setPositiveButton("Close", null)
+                        .show();
+            } else {
+                ActionUtils.startActivityForGallery(MainActivity.this, ActionUtils.PHOTO_REQUEST_GALLERY);
+            }
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK
+                && data != null
+                && requestCode == ActionUtils.PHOTO_REQUEST_GALLERY) {
+            Uri inputUri = data.getData();
+            String path = null;
 
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case REQUEST_CODE_PICK_IMAGE:
-
-                    Cursor cursor = getContentResolver().query(
-                            data.getData(), null, null, null, null);
-                    if (cursor == null){
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "Barcode Fail", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        return;
+            if (URLUtil.isFileUrl(inputUri.toString())) {
+                // 小米手机直接返回的文件路径
+                path = inputUri.getPath();
+            } else {
+                String[] proj = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getContentResolver().query(inputUri, proj, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    path = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DATA));
+                }
+            }
+            if (!TextUtils.isEmpty(path)) {
+                Result result = QrUtils.decodeImage(path);
+                if (result != null) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, result.getText());
+                    handleDecode(result, null);
+                } else {
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "Barcode Fail", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            } else {
+                if (BuildConfig.DEBUG) Log.e(TAG, "image path not found");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Image path not found", Toast.LENGTH_SHORT).show();
                     }
-                    if (cursor.moveToFirst()) {
-                        photoPath = cursor.getString(cursor
-                                .getColumnIndex(MediaStore.Images.Media.DATA));
-                    }
-                    cursor.close();
-
-
-                    Bitmap img = BitmapUtils
-                            .getCompressedBitmap(photoPath);
-
-                    BitmapDecoder decoder = new BitmapDecoder(
-                            MainActivity.this);
-                    Result result = decoder.getRawResult(img);
-
-                    if (result != null) {
-                        saveCode(ResultParser.parseResult(result)
-                                .toString());
-                    } else {
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "Barcode Fail", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-
+                });
             }
 
 
         }
     }
 
+    public void handleDecode(Result result, Bitmap barcode) {
+        inactivityTimer.onActivity();
+        String resultString = result.getText();
+        saveCode(resultString);
+    }
 
     @OnClick(R.id.img_list)
     public void openHistory() {
@@ -284,57 +351,34 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         startActivity(intent);
     }
 
-    private static class CustomViewFinderView extends ViewFinderView {
-        public static final int TRADE_MARK_TEXT_SIZE_SP = 40;
-        public final Paint PAINT = new Paint();
-
-        public CustomViewFinderView(Context context) {
-            super(context);
-            init();
-        }
-
-        public CustomViewFinderView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            init();
-        }
-
-        private void init() {
-            PAINT.setColor(Color.WHITE);
-            PAINT.setAntiAlias(true);
-            float textPixelSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
-                    TRADE_MARK_TEXT_SIZE_SP, getResources().getDisplayMetrics());
-            PAINT.setTextSize(textPixelSize);
-            setSquareViewFinder(true);
-        }
-
-        @Override
-        public void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-
-        }
-
-        private void drawTradeMark(Canvas canvas) {
-            Rect framingRect = getFramingRect();
-            float tradeMarkTop;
-            float tradeMarkLeft;
-            if (framingRect != null) {
-                tradeMarkTop = framingRect.bottom + PAINT.getTextSize() + 10;
-                tradeMarkLeft = framingRect.left;
-            } else {
-                tradeMarkTop = 10;
-                tradeMarkLeft = canvas.getHeight() - PAINT.getTextSize() - 10;
-            }
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        if (!hasSurface) {
+            hasSurface = true;
+            initCamera(surfaceHolder);
         }
     }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        hasSurface = false;
+    }
+
 
     @Override
     public void onBackPressed() {
         if (mInterstitialAd.isLoaded()) {
             mInterstitialAd.show();
         } else {
-           super.onBackPressed();
+            super.onBackPressed();
         }
     }
+
     public static String getDateTimeCurrent() {
         Date currentTime = Calendar.getInstance().getTime();
         String sDate = "";
@@ -342,8 +386,31 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         sDate = formatter.format(currentTime);
         return sDate;
     }
+
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
+
+    public ViewfinderView getViewfinderView() {
+        return viewfinderView;
+    }
+
+    public Handler getHandler() {
+        return handler;
+    }
+
+    public void drawViewfinder() {
+        viewfinderView.drawViewfinder();
+    }
+
+    protected void restartPreview() {
+        // 当界面跳转时 handler 可能为null
+        if (handler != null) {
+            Message restartMessage = Message.obtain();
+            restartMessage.what = R.id.restart_preview;
+            handler.handleMessage(restartMessage);
+        }
+    }
+
 }

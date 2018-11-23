@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 import io.realm.Sort;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
@@ -29,7 +31,7 @@ public class ListScanActivity extends AppCompatActivity {
     RecyclerView rvHistory;
     @BindView(R.id.cb_delete)
     CheckBox cbDelete;
-    private RealmList<QRCode> realmList;
+    private RealmResults<QRCode> realmList;
     private Realm realm = Realm.getDefaultInstance();
     private RecyclerView.LayoutManager mLayoutManager;
     private HistoryAdapter adapter;
@@ -45,7 +47,7 @@ public class ListScanActivity extends AppCompatActivity {
 
         mAdView.loadAd(adRequest);
 
-        realmList = realm.where(QRCodeList.class).findFirst().getItemList();
+        realmList = realm.where(QRCode.class).sort("id").findAll();
         adapter = new HistoryAdapter(realmList, new HistoryAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(QRCode item) {
@@ -85,8 +87,13 @@ public class ListScanActivity extends AppCompatActivity {
     @OnClick(R.id.img_delete)
     public void delete() {
         if (realmList.size() > 0) {
+            final Collection<Integer> ids = adapter.getCountersToDelete();
+            RealmHelper.deleteItemsAsync(realm, ids);
+            adapter.clearCounterDelete();
+            if (cbDelete.isChecked()){
 
-            RealmHelper.deleteItemsAsync(realm, adapter.getCountersToDelete());
+                cbDelete.setChecked(false);
+            }
         }
     }
 
@@ -105,7 +112,7 @@ public class ListScanActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (realmList.size() > 0) {
-         //   adapter.enableDeletionMode(false);
+            //   adapter.enableDeletionMode(false);
         }
     }
 
@@ -113,7 +120,7 @@ public class ListScanActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (realmList.size() > 0) {
-          //  adapter.enableDeletionMode(true);
+            //  adapter.enableDeletionMode(true);
         }
     }
 

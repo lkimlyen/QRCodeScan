@@ -28,7 +28,7 @@ public class RealmHelper {
         Number id = mRealm.where(QRCode.class).max("id");
         // If id is null, set it to 1, else set increment it by 1
         nextId = (id == null) ? 0 : id.intValue();
-        return nextId;
+        return nextId +1;
     }
 
     public static void deleteItemAsync(final int id) {
